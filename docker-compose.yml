@@ -1,0 +1,133 @@
+# docker-compose.yml
+# Lifecycle Master Flutter App - Docker Configuration
+#
+# Usage:
+#   docker-compose up analyzer      - Run static analysis
+#   docker-compose up tester        - Run unit tests
+#   docker-compose up build-web     - Build web release
+#   docker-compose up build-apk     - Build Android APK
+#   docker-compose up web-server    - Serve web build on port 8080
+#   docker-compose run dev bash     - Interactive development shell
+#
+
+services:
+  # ============================================
+  # Static Analysis Service
+  # ============================================
+  analyzer:
+    build:
+      context: .
+      target: base
+    working_dir: /app
+    volumes:
+      - .:/app
+      - flutter_cache:/root/.pub-cache
+    command: sh -c "flutter pub get && flutter analyze --no-fatal-infos"
+    
+  # ============================================
+  # Unit Test Runner
+  # ============================================
+  tester:
+    build:
+      context: .
+      target: base
+    working_dir: /app
+    volumes:
+      - .:/app
+      - flutter_cache:/root/.pub-cache
+      - ./coverage:/app/coverage
+    command: sh -c "flutter pub get && flutter test --coverage"
+    
+  # ============================================
+  # Web Build Service
+  # ============================================
+  build-web:
+    build:
+      context: .
+      target: base
+    working_dir: /app
+    volumes:
+      - .:/app
+      - flutter_cache:/root/.pub-cache
+    command: sh -c "flutter pub get && flutter build web --release"
+    
+  # ============================================
+  # APK Build Service
+  # ============================================
+  build-apk:
+    build:
+      context: .
+      target: base
+    working_dir: /app
+    volumes:
+      - .:/app
+      - flutter_cache:/root/.pub-cache
+      - gradle_cache:/root/.gradle
+    environment:
+      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+    command: sh -c "flutter pub get && flutter build apk --release --no-tree-shake-icons"
+    
+  # ============================================
+  # Web Server (serves built web app)
+  # ============================================
+  web-server:
+    image: nginx:alpine
+    volumes:
+      - ./build/web:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8090:80"
+    depends_on:
+      - build-web
+    restart: unless-stopped
+    
+  # ============================================
+  # Development Environment
+  # ============================================
+  dev:
+    build:
+      context: .
+      target: base
+    working_dir: /app
+    volumes:
+      - .:/app
+      - flutter_cache:/root/.pub-cache
+    ports:
+      - "9100:9100"  # Flutter DevTools
+      - "5000:5000"  # Web debug server
+    stdin_open: true
+    tty: true
+    command: bash
+
+  # ============================================
+  # Integration Test Runner
+  # ============================================
+  integration-test:
+    build:
+      context: .
+      target: base
+    working_dir: /app
+    volumes:
+      - .:/app
+      - flutter_cache:/root/.pub-cache
+    command: sh -c "flutter pub get && flutter test integration_test/"
+
+  # ============================================
+  # Format & Fix Service
+  # ============================================
+  formatter:
+    build:
+      context: .
+      target: base
+    working_dir: /app
+    volumes:
+      - .:/app
+      - flutter_cache:/root/.pub-cache
+    command: sh -c "flutter pub get && dart format . && dart fix --apply"
+
+# Named volumes for caching
+volumes:
+  flutter_cache:
+    driver: local
+  gradle_cache:
+    driver: local

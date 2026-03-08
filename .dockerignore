@@ -1,0 +1,63 @@
+# Docker ignore file
+# Exclude files and directories that should not be copied into Docker containers
+
+# Build outputs
+build/
+.dart_tool/
+.packages
+
+# IDE and editor files
+.idea/
+.vscode/
+*.iml
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Test coverage
+coverage/
+
+# Android build files
+android/.gradle/
+android/app/build/
+android/local.properties
+*.keystore
+
+# iOS build files
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Runner.xcworkspace/
+
+# Web build files (we'll rebuild in container)
+web/
+
+# Windows/Linux/macOS desktop builds
+windows/flutter/
+linux/flutter/
+macos/Flutter/
+
+# Environment files (may contain secrets)
+.env
+.env.local
+.env.*.local
+
+# Documentation
+*.md
+!README.md
+
+# App data (runtime generated)
+app_data/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
